@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-#SBATCH --partition=gpu
-#SBATCH --gres=gpu:1
+#SBATCH --partition=gpu_a100
+##SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=40
-#SBATCH --mem=30G
+#SBATCH --mem=10G
 #SBATCH --output=results/hw3_shallow_%j_stdout.txt
 #SBATCH --error=results/hw3_shallow_%j_stderr.txt
 #SBATCH --time=02:00:00
