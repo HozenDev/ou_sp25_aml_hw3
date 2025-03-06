@@ -2,7 +2,7 @@
 #
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=40
 #SBATCH --mem=30G
 #SBATCH --output=results/hw3_shallow_%j_stdout.txt
 #SBATCH --error=results/hw3_shallow_%j_stderr.txt
