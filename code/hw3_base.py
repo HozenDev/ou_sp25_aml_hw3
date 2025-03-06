@@ -46,6 +46,7 @@ import pickle
 import pandas as pd
 import wandb
 import socket
+import keras
 
 from keras.utils import plot_model
 
