@@ -1,0 +1,5 @@
+--gpu
+--batch=4096
+--prefetch=2
+--epochs=2000
+--num_parallel_calls=16

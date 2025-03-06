@@ -1,0 +1,12 @@
+--conv_size
+3
+--conv_nfilters
+10
+--pool
+2
+--hidden
+6
+--dropout=.5
+--spatial_dropout=.2
+--l2=.0001
+--label=Net_Shallow

@@ -1,0 +1,9 @@
+--Ntraining=3
+--epochs=2000
+--patience=200
+--batch=256
+--shuffle=200
+--min_delta=0.001
+--no_use_py_func
+--dataset=/home/fagg/datasets/core50
+--precache=datasets_by_fold_4_objects
