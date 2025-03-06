@@ -10,7 +10,7 @@
 #SBATCH --job-name=hw3_shallow
 #SBATCH --mail-user=Enzo.B.Durel-1@ou.edu
 #SBATCH --mail-type=ALL
-#SBATCH --chdir=/home/cs504305/hw3/
+#SBATCH --chdir=/home/cs504305/hw3/code/
 ##SBATCH --array=0-4    # the double ## means that this line is ignored
 
 #################################################
