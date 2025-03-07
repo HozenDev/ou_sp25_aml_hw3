@@ -1,7 +1,8 @@
 --conv_size
 3
+3
 --conv_nfilters
-10
+8
 --pool
 2
 --hidden

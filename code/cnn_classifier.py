@@ -47,7 +47,10 @@ def create_cnn_classifier_network(image_size,
     
     # Convolutional layers with increasing filters before pooling
     for layer in conv_layers:
-        model.add(Conv2D(filters=layer['filters'],
+        # Compute factor to increase filters before pooling
+        factor = layer['pool_size'][0] if layer['pool_size'] else 1 
+        
+        model.add(Conv2D(filters=layer['filters'] * factor,
                          kernel_size=layer['kernel_size'],
                          strides=layer['strides'] if layer['strides'] else (1, 1),
                          padding=padding,
@@ -60,11 +63,7 @@ def create_cnn_classifier_network(image_size,
         if p_spatial_dropout > 0:
             model.add(SpatialDropout2D(p_spatial_dropout))
         
-        # Increase the number of filters before applying MaxPooling
         if layer['pool_size']:
-            model.add(Conv2D(filters=layer['filters'] * 2,
-                             kernel_size=(1,1),
-                             activation=conv_activation))  # 1x1 conv to increase channels
             model.add(MaxPooling2D(pool_size=layer['pool_size']))
     
     # Apply Flatten if specified, else use GlobalMaxPooling
