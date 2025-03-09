@@ -9,10 +9,14 @@
 !/code/*.py
 !/code/*.txt
 !/code/*.sh
+!/code/pkl
+/code/pkl/*
+!/code/pkl/*.pkl
 
 !/img
 
 !/report
 /report/*
 !/report/*.org
-!/report/*.pdf
+!/report/*.pdff
+
