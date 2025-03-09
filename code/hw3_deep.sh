@@ -4,8 +4,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=30G
-#SBATCH --output=results/hw3_shallow_%j_stdout.txt
-#SBATCH --error=results/hw3_shallow_%j_stderr.txt
+#SBATCH --output=results/hw3_deep_%j_stdout.txt
+#SBATCH --error=results/hw3_deep_%j_stderr.txt
 #SBATCH --time=02:00:00
 #SBATCH --job-name=hw3_deep
 #SBATCH --mail-user=Enzo.B.Durel-1@ou.edu
