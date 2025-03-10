@@ -17,5 +17,7 @@
 . /home/fagg/tf_setup.sh
 conda activate dnn
 
+SLURM_ARRAY_TASK_ID=0
+
 ## SHALLOW
 python plot.py @exp.txt --exp_index $SLURM_ARRAY_TASK_ID
