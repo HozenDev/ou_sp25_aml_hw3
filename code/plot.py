@@ -34,12 +34,12 @@ def plot_sample_predictions(args, predictions, class_names, num_samples=5):
 
     if args.precache is None:
         # Load individual files (all objects); DON'T USE THIS CASE
-        ds_train, ds_validation, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
+        _, _, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
     else:
         # Load pre-cached data: this is what you want for HW 3
-        ds_train, ds_validation, ds_testing, n_classes = load_precached_folds(args)
+        _, _, ds_testing, n_classes = load_precached_folds(args)
 
-    print(ds_testing[0].shape)
+    print(ds_testing)
         
     """
     for i, ax in enumerate(axes):
