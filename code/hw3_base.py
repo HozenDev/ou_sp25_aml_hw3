@@ -493,6 +493,7 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
     if ds_testing is not None:
         print('#################')
         print('Testing')
+        results['ds_testing'] = ds_testing
         results['predict_testing'] = model.predict(ds_testing)
         results['predict_testing_eval'] = model.evaluate(ds_testing)
         wandb.log({'final_test_loss': results['predict_testing_eval'][0]})

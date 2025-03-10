@@ -3,6 +3,7 @@ import numpy as np
 import os
 import pickle
 
+from tensorflow.keras.models import load_model
 from hw3_base import load_precached_folds
 from hw3_parser import create_parser
 from core50 import Core50
@@ -10,6 +11,14 @@ from core50 import Core50
 #########################################
 #             Load Results              #
 #########################################
+
+def load_trained_model(directory):
+    """
+    Load a trained Keras model from a given directory.
+    :param directory: Path to the .keras model file
+    :return: Loaded Keras model
+    """
+    return load_model(f"{directory}/model.keras")
 
 def load_results(results_dir):
     results = []
@@ -29,17 +38,36 @@ def load_results(results_dir):
 #########################################
 
 # Figure 3: Display sample test images with predicted probabilities
-def plot_sample_predictions(args, predictions, class_names, num_samples=5):
+def plot_sample_predictions(dataset, model, class_names, num_samples=5):
+    """
+    Display sample images from the dataset along with model predictions.
+    :param dataset: TensorFlow dataset object (test dataset)
+    :param model: Trained model for prediction
+    :param class_names: List of class names
+    :param num_samples: Number of images to display
+    """
+    
     fig, axes = plt.subplots(1, num_samples, figsize=(15, 5))
 
-    if args.precache is None:
-        # Load individual files (all objects); DON'T USE THIS CASE
-        _, _, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
-    else:
-        # Load pre-cached data: this is what you want for HW 3
-        _, _, ds_testing, n_classes = load_precached_folds(args)
+    images, labels = [], []
+    for image_batch, label_batch in dataset.take(1):  # Take 1 batch
+        images = image_batch.numpy()
+        labels = label_batch.numpy()
+        break  # Exit after first batch
+    
+    predictions = model.predict(images)
+    predicted_labels = np.argmax(predictions, axis=1)
+    
+    fig, axes = plt.subplots(1, num_samples, figsize=(15, 5))
+    for i in range(num_samples):
+        ax = axes[i]
+        ax.imshow(images[i].astype("uint8"))
+        title = f"True: {class_names[labels[i]]}\nPred: {class_names[predicted_labels[i]]}"
+        ax.set_title(title)
+        ax.axis("off")
+    plt.show()
 
-    print(ds_testing)
+    
         
     """
     for i, ax in enumerate(axes):
@@ -121,19 +149,28 @@ if __name__ == "__main__":
     # Use parser
     parser = create_parser()
     args = parser.parse_args()
+
+    if args.precache is None:
+        # Load individual files (all objects); DON'T USE THIS CASE
+        _, _, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
+    else:
+        # Load pre-cached data: this is what you want for HW 3
+        _, _, ds_testing, n_classes = load_precached_folds(args)
     
     # Load data (modify paths accordingly)
     shallow_dir = ["./pkl/shallow_1/"]
     deep_dir = ["./pkl/default_deep/"]
 
     shallow_results = load_results(shallow_dir)
+    shallow_model = load_trained_model(shallow_dir)
     deep_results = load_results(deep_dir)
+    deep_model = load_trained_model(deep_dir)
     
     # Extract relevant data
     shallow_preds = [np.argmax(res['predict_testing'], axis=1) for res in shallow_results]
     deep_preds = [np.argmax(res['predict_testing'], axis=1) for res in deep_results]
     true_labels = [res['predict_testing_eval'][1] for res in shallow_results]  # Assuming same for all rotations
-    
+
     class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']
 
     # Generate Figures
