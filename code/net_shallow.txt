@@ -12,3 +12,4 @@
 --dropout=.5
 --spatial_dropout=.2
 --l2=.0001
+--label=Net_Shallow
