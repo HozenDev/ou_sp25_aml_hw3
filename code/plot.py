@@ -155,7 +155,7 @@ def plot_combined_confusion_matrix(models, test_ds, title="Confusion Matrix", fi
     plt.savefig(filename)
 
 
-def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
+def plot_test_accuracy_scatter(shallow_results, deep_results):
     """
     Plots a scatter plot comparing test accuracies of shallow vs. deep models.
 
@@ -164,16 +164,24 @@ def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
     """
 
     shallow_accuracies, deep_accuracies = [], []
+    rotations = list(range(len(shallow_results)))
     
-    for result in shallow_results_files:
+    for result in shallow_results:
         shallow_accuracies.append(result["predict_testing_eval"][1])  # Extract accuracy
 
-    for result in deep_results_files:
+    for result in deep_results:
         deep_accuracies.append(result["predict_testing_eval"][1])  # Extract accuracy
+
+    # Define color map
+    colors = plt.cm.get_cmap("tab10", len(rotations))  # Use a distinct color per rotation
 
     # Scatter plot
     plt.figure(figsize=(7,7))
-    plt.scatter(shallow_accuracies, deep_accuracies, label="Runs")
+    for i in range(len(rotations)):
+        plt.scatter(shallow_accuracies[i], deep_accuracies[i], color=colors(i), label=f"Rot {rotations[i]}")
+        plt.text(shallow_accuracies[i], deep_accuracies[i], f"{rotations[i]}", fontsize=10, ha='right', va='bottom')
+
+    # Diagonal line    
     plt.plot([0, 1], [0, 1], 'k--', lw=2)  # y = x line
 
     plt.xlabel("Shallow Model Accuracy")
