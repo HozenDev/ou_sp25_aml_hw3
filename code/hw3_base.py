@@ -304,7 +304,7 @@ def load_precached_folds(args:argparse.ArgumentParser, seed:int=42):
     return ds_training, ds_validation, ds_testing, nobjects
     
 #################################################################
-def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
+def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:int=1):
     '''
     Perform the training and evaluation for a single model
     
@@ -312,7 +312,10 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
     :param multi_gpus: True if there are more than one GPU
     '''
 
-    # Check the arguments
+    #################################
+    #        Argument Parser        #
+    #################################
+    
     if args is None:
         # Case where no args are given (usually, because we are calling from within Jupyter)
         #  In this situation, we just use the default arguments
@@ -324,45 +327,38 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
     # Override arguments if we are using exp_index
     args_str = augment_args(args)
 
+    #################################
+    #       Model Configuration     #
+    #################################
+
     # Scale the batch size with the number of GPUs
     if multi_gpus > 1:
         args.batch = args.batch*multi_gpus
 
     print('Batch size', args.batch)
 
-    ####################################################
-    # Create the TF datasets for training, validation, testing
-
-    if args.verbose >= 3:
-        print('Starting data flow')
-
-    if args.precache is None:
-        # Load individual files (all objects); DON'T USE THIS CASE
-        ds_train, ds_validation, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
-    else:
-        # Load pre-cached data: this is what you want for HW 3
-        ds_train, ds_validation, ds_testing, n_classes = load_precached_folds(args)
-
-    ####################################################
-    # Build the model
     if args.verbose >= 3:
         print('Building network')
 
     image_size=args.image_size[0:2]
     nchannels = args.image_size[2]
-
-    # Network config
-    # NOTE: this is very specific to our implementation of create_cnn_classifier_network()
-    #   List comprehension and zip all in one place (ugly, but effective).
-    #   Feel free to organize this differently
-    #
-    #  Our implementation requries 2-tuples for kernel size, pool size and stride size
-    #
-    conv_layers = [{'filters': f, 'kernel_size': (s,s), 'pool_size': (p,p), 'strides': (p,p), 'batch_normalization': args.batch_normalization}
-                   if p > 1 else {'filters': f, 'kernel_size': (s,s), 'pool_size': None, 'strides': None, 'batch_normalization': args.batch_normalization}
-                   for s, f, p, in zip(args.conv_size, args.conv_nfilters, args.pool)]
     
-    dense_layers = [{'units': i, 'batch_normalization': args.batch_normalization} for i in args.hidden]
+    conv_layers = []
+    for s, f, p in zip(args.conv_size, args.conv_nfilters, args.pool):
+        conv_layer = dict()
+        conv_layer['filters'] = f
+        conv_layer['kernel_size'] = (s,s)
+        conv_layer['pool_size'] = (p,p) if p > 1 else None
+        conv_layer['strides'] = (p,p) if p > 1 else None
+        conv_layer['batch_normalization'] = args.batch_normalization
+        conv_layers.append(conv_layer)
+
+    dense_layers = []
+    for i in args.hidden:
+        dense_layer = dict()
+        dense_layer['units'] = i
+        dense_layer['batch_normalization'] = args.batch_normalization
+        dense_layers.append(dense_layer)
     
     print("Dense layers:", dense_layers)
     print("Conv layers:", conv_layers)
@@ -410,23 +406,18 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
     if args.verbose >= 1:
         print(model.summary())
 
-    print(args)
-
     # Output file base and pkl file
     fbase = generate_fname(args, args_str)
-    print(fbase)
     fname_out = "%s_results.pkl"%fbase
 
     # Plot the model
+    render_fname = '%s_model_plot.png'%fbase
     if args.render:
-        render_fname = '%s_model_plot.png'%fbase
         plot_model(model, to_file=render_fname, show_shapes=True, show_layer_names=True)
 
     # Perform the experiment?
     if args.nogo:
-        # No!
         print("NO GO")
-        print(fbase)
         return
 
     # Check if output file already exists
@@ -435,8 +426,10 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
         print("File %s already exists"%fname_out)
         return
 
-    #####
-    # Start wandb
+    #################################
+    #             WandB             #
+    #################################
+    
     run = wandb.init(project=args.project, name='%s_R%d'%(args.label,args.rotation), notes=fbase, config=vars(args))
 
     # Log hostname
@@ -445,10 +438,11 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
     # Log model design image
     if args.render:
         wandb.log({'model architecture': wandb.Image(render_fname)})
-
             
-    #####
-    # Callbacks
+    #################################
+    #            Callbacks          #
+    #################################
+    
     cbs = []
     early_stopping_cb = keras.callbacks.EarlyStopping(patience=args.patience,
                                                       restore_best_weights=True,
@@ -463,7 +457,25 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
     if args.verbose >= 3:
         print('Fitting model')
 
-    # Learn
+    #################################
+    #         Load Datasets         #
+    #################################
+
+    if args.verbose >= 3:
+        print('Starting data flow')
+
+    if args.precache is None:
+        # Load individual files (all objects); DON'T USE THIS CASE
+        # ds_train, ds_validation, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
+        raise ValueError("No precache, do not use this case")
+    else:
+        # Load pre-cached data: this is what you want for HW 3
+        ds_train, ds_validation, ds_testing, n_classes = load_precached_folds(args)
+
+    #################################
+    #              Learn            #
+    #################################
+        
     #  steps_per_epoch: how many batches from the training set do we use for training in one epoch?
     #          Note that if you use this, then you must repeat the training set
     #  validation_steps=None means that ALL validation samples will be used
@@ -475,7 +487,9 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:bool=False):
                         validation_steps=None,
                         callbacks=cbs)
 
-    # Done training
+    #################################
+    #            Results            #
+    #################################
 
     # Generate results data
     results = {}
@@ -606,4 +620,3 @@ if __name__ == "__main__":
 
         # Do the work
         execute_exp(args, multi_gpus=n_visible_devices)
-        
