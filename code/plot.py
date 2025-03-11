@@ -15,22 +15,26 @@ CORE50_METADATA_PATH = "/home/fagg/datasets/core50/core50_df.pkl"  # Adjust path
 #             Class Mapping             #
 #########################################
 
-def get_class_mappings(core50_pkl_path):
+def get_class_mappings(core50_pkl_path, num_classes):
     """
-    Loads the core50_df.pkl file and extracts unique class labels.
+    Loads core50_df.pkl and extracts only the required number of class labels.
 
     :param core50_pkl_path: Path to the core50 metadata pickle file.
-    :return: Dictionary mapping class labels to object names.
+    :param num_classes: Number of classes in the model's predictions
+    :return: Dictionary mapping class indices (0 to num_classes-1) to object names
     """
     # Load the metadata file
     with open(core50_pkl_path, "rb") as f:
         df = pickle.load(f)
 
-    # Extract unique class labels and objects
+    # Extract unique class labels
     class_mapping = df[['class', 'object']].drop_duplicates().sort_values(by='class')
-    
-    # Create a dictionary mapping class index to object ID
-    class_dict = {row['class']: f"Object {row['object']}" for _, row in class_mapping.iterrows()}
+
+    # Only keep the first `num_classes` entries
+    trained_classes = class_mapping['class'].unique()[:num_classes]
+
+    # Create a dictionary mapping class index to object name
+    class_dict = {i: f"{trained_classes[i]}" for i in range(num_classes)}
 
     return class_dict
 
@@ -55,7 +59,7 @@ def load_results(results_dir):
 #             Plot Methods              #
 #########################################
 
-def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_path, num_samples=5):
+def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_path, num_samples=5, num_classes=4):
     """
     Plots test images with probability distributions from the shallow and deep models.
 
@@ -86,7 +90,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     images = (images * 255).astype(np.uint8)
 
     # Usage Example
-    class_names = get_class_mappings(CORE50_METADATA_PATH)
+    class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes)
 
     # Fix issue when num_samples = 1
     fig, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
@@ -100,13 +104,13 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
         # Shallow model predictions
         axes[i, 0].imshow(img.astype("uint8"))
         axes[i, 0].axis('off')
-        shallow_title = "\n".join([f"{class_names[j]}: {shallow_predictions[i][j]:.2f}" for j in class_names.keys()])
+        shallow_title = "\n".join([f"{class_names[j]}: {shallow_predictions[i][j]:.2f}" for j in range(num_classes)])
         axes[i, 0].set_title(f"Shallow Model\n{shallow_title}", fontsize=10)
 
         # Deep model predictions
         axes[i, 1].imshow(img.astype("uint8"))
         axes[i, 1].axis('off')
-        # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in class_names.keys()])
+        # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(num_classes)])
         deep_title = "?"
         axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
 
@@ -114,7 +118,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     plt.savefig("figure_3.png")
 
     
-def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filename="figure4.png"):
+def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filename="figure4.png", num_classes=4):
     """
     Computes and plots a confusion matrix for a given model and test dataset.
 
@@ -133,7 +137,7 @@ def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filenam
 
     # Compute and display confusion matrix
     cm = confusion_matrix(y_true, y_pred)
-    class_names = get_class_mappings(CORE50_METADATA_PATH)
+    class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes)
 
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=list(class_names.values()))
     disp.plot(cmap='Blues', values_format='d')
@@ -180,7 +184,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     check_args(args)
     
-    _, _, test_ds, _ = load_precached_folds(args)
+    _, _, test_ds, num_classes = load_precached_folds(args)
 
     shallow_model_dir ="./models/shallow_2/"
     shallow_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
@@ -189,13 +193,13 @@ if __name__ == "__main__":
     deep_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
     
     # Figure 3: Test Sample with Predictions
-    plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path=shallow_model_name, deep_model_path=deep_model_name, num_samples=5)
+    plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path=shallow_model_name, deep_model_path=deep_model_name, num_samples=5, num_classes=num_classes)
 
     # Figure 4a: Shallow Model Confusion Matrix
-    # plot_confusion_matrix(shallow_model_name, test_ds, title="Shallow Model Confusion Matrix", , filename="figure_4a.png")
+    # plot_confusion_matrix(shallow_model_name, test_ds, title="Shallow Model Confusion Matrix", filename="figure_4a.png", num_classes=num_classes)
 
     # Figure 4b: Deep Model Confusion Matrix
-    # plot_confusion_matrix(deep_model_name, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png")
+    # plot_confusion_matrix(deep_model_name, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png", num_classes=num_classes)
 
     # Figure 5: Test Accuracy Scatter Plot
     # shallow_results = load_results(["./pkl/shallow_1/"])
