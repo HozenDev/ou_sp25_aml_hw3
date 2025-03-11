@@ -97,7 +97,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_sa
 
     # Predicting testing images
     shallow_predictions = shallow_model.predict(images[:num_samples])
-    # deep_predictions = deep_model.predict(images[:num_samples])
+    deep_predictions = deep_model.predict(images[:num_samples])
 
     # Format images and class names
     images = (images * 255).astype(np.uint8) # Convert images to uint8 for plotting
@@ -121,8 +121,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_sa
         # Deep model predictions
         axes[i, 1].imshow(img.astype("uint8"))
         axes[i, 1].axis('off')
-        # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(num_classes)])
-        deep_title = "?"
+        deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(num_classes)])
         axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
 
     plt.tight_layout()

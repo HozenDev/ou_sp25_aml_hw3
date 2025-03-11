@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#SBATCH --partition=debug
+#SBATCH --partition=gpu
 #SBATCH --cpus-per-task=20
 #SBATCH --mem=10G
 #SBATCH --output=results/hw3_plot_%j_stdout.txt
@@ -16,5 +16,4 @@
 . /home/fagg/tf_setup.sh
 conda activate dnn
 
-## SHALLOW
 python plot.py -v @exp.txt @oscer.txt --cache "" --render
