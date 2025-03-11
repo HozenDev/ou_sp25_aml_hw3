@@ -71,6 +71,11 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     shallow_predictions = shallow_model.predict(images[:num_samples])
     # deep_predictions = deep_model.predict(images[:num_samples])
 
+    images = (images * 255).astype(np.uint8)
+
+    print(images[0].shape)
+    print(images[0][0])
+    
     class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']  # Adjust if needed
 
     # Fix issue when num_samples = 1
