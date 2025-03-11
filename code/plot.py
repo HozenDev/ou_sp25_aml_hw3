@@ -48,7 +48,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     """
     # Load trained models
     shallow_model = tf.keras.models.load_model(shallow_model_path)
-    deep_model = tf.keras.models.load_model(deep_model_path)
+    # deep_model = tf.keras.models.load_model(deep_model_path)
 
     # Extract test samples
     images = []
@@ -57,7 +57,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     
     num_samples = min(num_samples, len(images))
     shallow_predictions = shallow_model.predict(images[:num_samples])
-    deep_predictions = deep_model.predict(images[:num_samples])
+    # deep_predictions = deep_model.predict(images[:num_samples])
 
     class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']  # Update if necessary
 
@@ -73,8 +73,9 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
         # Deep model predictions
         axes[i, 1].imshow(images[i].astype("uint8"))
         axes[i, 1].axis('off')
-        deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(len(class_names))])
-        axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
+        # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(len(class_names))])
+        # axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
+        axes[i, 1].set_title("Deep Model\n ?", fontsize=10)
 
     plt.tight_layout()
     plt.show()
@@ -147,10 +148,16 @@ if __name__ == "__main__":
     check_args(args)
     
     _, _, test_ds, _ = load_precached_folds(args)
-    print("ouiouiuouiuo")
 
+
+    shallow_model_dir ="./models/shallow_2/"
+    shallow_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
+
+    deep_model_dir = "./models/default_deep/"
+    deep_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
+    
     # Figure 3: Test Sample with Predictions
-    # plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path="Net_Shallow_model.keras", deep_model_path="Net_Deep_model.keras", num_samples=5)
+    plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path=shallow_model_name, deep_model_path=deep_model_name, num_samples=5)
 
     # Figure 4a: Shallow Model Confusion Matrix
     # plot_confusion_matrix("Net_Shallow_model.keras", test_ds, title="Shallow Model Confusion Matrix")
@@ -159,8 +166,7 @@ if __name__ == "__main__":
     # plot_confusion_matrix("Net_Deep_model.keras", test_ds, title="Deep Model Confusion Matrix")
 
     # Figure 5: Test Accuracy Scatter Plot
-    shallow_results = load_results(["./pkl/shallow_1/"])
-    deep_results = load_results(["./pkl/default_deep/"])
-
-    plot_test_accuracy_scatter(shallow_results, deep_results)
+    # shallow_results = load_results(["./pkl/shallow_1/"])
+    # deep_results = load_results(["./pkl/default_deep/"])
+    # plot_test_accuracy_scatter(shallow_results, deep_results)
 
