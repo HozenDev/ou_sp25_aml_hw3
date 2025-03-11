@@ -38,6 +38,10 @@ def load_results(results_dir):
 #             Plot Methods              #
 #########################################
 
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
 def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_path, num_samples=5):
     """
     Plots test images with probability distributions from the shallow and deep models.
@@ -51,32 +55,45 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     shallow_model = tf.keras.models.load_model(shallow_model_path)
     # deep_model = tf.keras.models.load_model(deep_model_path)
 
-    # Extract test samples
-    images = []
-    for image, _ in test_ds.take(1):
-        images.append(image.numpy())
-    
+    # Extract images and labels properly
+    images, labels = [], []
+    for img_batch, label_batch in test_ds.take(num_samples):
+        images.append(img_batch.numpy())  # Convert TensorFlow tensor to numpy
+        labels.append(label_batch.numpy())
+
+    # Convert lists to numpy arrays
+    images = np.concatenate(images, axis=0)
+    labels = np.concatenate(labels, axis=0)
+
+    # Ensure we have the correct number of samples
     num_samples = min(num_samples, len(images))
+
     shallow_predictions = shallow_model.predict(images[:num_samples])
     # deep_predictions = deep_model.predict(images[:num_samples])
 
-    class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']  # Update if necessary
+    class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']  # Adjust if needed
 
+    # Fix issue when num_samples = 1
     fig, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
+    if num_samples == 1:
+        axes = np.expand_dims(axes, axis=0)  # Ensure 2D shape
 
     for i in range(num_samples):
+        # Ensure images are in correct format for `imshow`
+        img = np.squeeze(images[i])  # Remove extra dimensions if needed
+
         # Shallow model predictions
-        axes[i, 0].imshow(images[i].astype("uint8"))
+        axes[i, 0].imshow(img.astype("uint8"))
         axes[i, 0].axis('off')
         shallow_title = "\n".join([f"{class_names[j]}: {shallow_predictions[i][j]:.2f}" for j in range(len(class_names))])
         axes[i, 0].set_title(f"Shallow Model\n{shallow_title}", fontsize=10)
 
         # Deep model predictions
-        axes[i, 1].imshow(images[i].astype("uint8"))
+        axes[i, 1].imshow(img.astype("uint8"))
         axes[i, 1].axis('off')
         # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(len(class_names))])
-        # axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
-        axes[i, 1].set_title("Deep Model\n ?", fontsize=10)
+        deep_title = "?"
+        axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
 
     plt.tight_layout()
     plt.savefig("figure3.png")
