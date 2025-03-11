@@ -86,7 +86,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     images = (images * 255).astype(np.uint8)
 
     # Usage Example
-    class_names = get_class_mappings(CORE50_METADATA_PATH).values()
+    class_names = get_class_mappings(CORE50_METADATA_PATH)
 
     # Fix issue when num_samples = 1
     fig, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
@@ -100,13 +100,13 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
         # Shallow model predictions
         axes[i, 0].imshow(img.astype("uint8"))
         axes[i, 0].axis('off')
-        shallow_title = "\n".join([f"{class_names[j]}: {shallow_predictions[i][j]:.2f}" for j in range(len(class_names))])
+        shallow_title = "\n".join([f"{class_names[j]}: {shallow_predictions[i][j]:.2f}" for j in class_names.keys()])
         axes[i, 0].set_title(f"Shallow Model\n{shallow_title}", fontsize=10)
 
         # Deep model predictions
         axes[i, 1].imshow(img.astype("uint8"))
         axes[i, 1].axis('off')
-        # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in range(len(class_names))])
+        # deep_title = "\n".join([f"{class_names[j]}: {deep_predictions[i][j]:.2f}" for j in class_names.keys()])
         deep_title = "?"
         axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
 
@@ -133,9 +133,9 @@ def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filenam
 
     # Compute and display confusion matrix
     cm = confusion_matrix(y_true, y_pred)
-    class_names = get_class_mappings(CORE50_METADATA_PATH).values()
+    class_names = get_class_mappings(CORE50_METADATA_PATH)
 
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=list(class_names.values()))
     disp.plot(cmap='Blues', values_format='d')
     plt.title(title)
     plt.savefig(filename)
