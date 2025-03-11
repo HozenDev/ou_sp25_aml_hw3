@@ -132,7 +132,7 @@ def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
     plt.title("Test Accuracy: Deep vs. Shallow")
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig("test.png")
 
 
 #########################################
@@ -147,6 +147,7 @@ if __name__ == "__main__":
     check_args(args)
     
     _, _, test_ds, _ = load_precached_folds(args)
+    print("ouiouiuouiuo")
 
     # Figure 3: Test Sample with Predictions
     # plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path="Net_Shallow_model.keras", deep_model_path="Net_Deep_model.keras", num_samples=5)
