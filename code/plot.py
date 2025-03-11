@@ -17,7 +17,7 @@ CORE50_METADATA_PATH = "/home/fagg/datasets/core50/core50_df.pkl"  # Adjust path
 
 def get_class_mappings(core50_pkl_path, num_classes):
     """
-    Loads core50_df.pkl and extracts only the required number of class labels.
+    Loads core50_df.pkl and extracts object names for the trained classes.
 
     :param core50_pkl_path: Path to the core50 metadata pickle file.
     :param num_classes: Number of classes in the model's predictions
@@ -27,14 +27,15 @@ def get_class_mappings(core50_pkl_path, num_classes):
     with open(core50_pkl_path, "rb") as f:
         df = pickle.load(f)
 
-    # Extract unique class labels
+    # Extract unique class-object mappings
     class_mapping = df[['class', 'object']].drop_duplicates().sort_values(by='class')
 
-    # Only keep the first `num_classes` entries
-    trained_classes = class_mapping['class'].unique()[:num_classes]
+    # Only keep the first `num_classes` entries (the ones used in training)
+    trained_classes = class_mapping.iloc[:num_classes]
 
-    # Create a dictionary mapping class index to object name
-    class_dict = {i: f"{trained_classes[i]}" for i in range(num_classes)}
+    # Create a dictionary mapping class index (0,1,2,3...) to human-readable object names
+    class_dict = {i: f"Class {trained_classes.iloc[i]['class']} - Object {trained_classes.iloc[i]['object']}"
+                  for i in range(num_classes)}
 
     return class_dict
 
