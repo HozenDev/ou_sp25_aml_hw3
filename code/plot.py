@@ -141,11 +141,6 @@ def plot_combined_confusion_matrix(models, test_ds, title="Confusion Matrix", fi
     class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']
 
     for model in models:
-        # Determine the number of classes dynamically
-        for images, _ in test_ds.take(1):
-            model.predict(images).shape[1]
-
-        # Collect predictions from this model rotation
         for images, labels in test_ds:
             y_true.extend(labels.numpy())  # Ground truth labels
             y_pred.extend(np.argmax(model.predict(images), axis=1))  # Predicted classes
