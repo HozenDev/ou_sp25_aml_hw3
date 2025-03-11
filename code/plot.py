@@ -5,7 +5,7 @@ import pickle
 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from keras.saving import load_model
-from hw3_base import load_precached_folds
+from hw3_base import load_precached_folds, check_args
 from hw3_parser import create_parser
 
 #########################################
@@ -144,6 +144,7 @@ if __name__ == "__main__":
     # Parse command-line arguments
     parser = create_parser()
     args = parser.parse_args()
+    check_args(args)
     
     _, _, test_ds, _ = load_precached_folds(args)
 

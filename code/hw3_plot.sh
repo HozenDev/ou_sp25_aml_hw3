@@ -20,4 +20,4 @@ conda activate dnn
 SLURM_ARRAY_TASK_ID=0
 
 ## SHALLOW
-python plot.py @exp.txt --exp_index $SLURM_ARRAY_TASK_ID
+python plot.py -v @exp.txt @oscer.txt --exp_index $SLURM_ARRAY_TASK_ID  --cache "" --render
