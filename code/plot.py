@@ -79,10 +79,10 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
         axes[i, 1].set_title("Deep Model\n ?", fontsize=10)
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig("figure3.png")
 
     
-def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix"):
+def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filename="figure4.png"):
     """
     Computes and plots a confusion matrix for a given model and test dataset.
 
@@ -106,7 +106,7 @@ def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix"):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     disp.plot(cmap='Blues', values_format='d')
     plt.title(title)
-    plt.show()
+    plt.savefig(filename)
 
 def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
     """
@@ -134,7 +134,7 @@ def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
     plt.title("Test Accuracy: Deep vs. Shallow")
     plt.legend()
     plt.grid(True)
-    plt.savefig("test.png")
+    plt.savefig("figure5.png")
 
 
 #########################################
@@ -160,10 +160,10 @@ if __name__ == "__main__":
     plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path=shallow_model_name, deep_model_path=deep_model_name, num_samples=5)
 
     # Figure 4a: Shallow Model Confusion Matrix
-    # plot_confusion_matrix("Net_Shallow_model.keras", test_ds, title="Shallow Model Confusion Matrix")
+    # plot_confusion_matrix("Net_Shallow_model.keras", test_ds, title="Shallow Model Confusion Matrix", , filename="figure_4a.png")
 
     # Figure 4b: Deep Model Confusion Matrix
-    # plot_confusion_matrix("Net_Deep_model.keras", test_ds, title="Deep Model Confusion Matrix")
+    # plot_confusion_matrix("Net_Deep_model.keras", test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png")
 
     # Figure 5: Test Accuracy Scatter Plot
     # shallow_results = load_results(["./pkl/shallow_1/"])
