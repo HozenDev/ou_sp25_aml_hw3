@@ -43,6 +43,23 @@ def get_class_mappings(core50_pkl_path, num_classes):
 #             Load Results              #
 #########################################
 
+def load_trained_model(model_dir, substring_name):
+    """   
+    :param model_dir: Directory containing the trained model
+    :param regex: Regular expression to match the model file
+    :return: Loaded model
+    """
+    model_files = [f for f in os.listdir(model_dir) if substring_name in f]
+
+    if not model_files:
+        raise ValueError(f"No model found in {model_dir} matching {substring_name}")
+
+    model_path = os.path.join(model_dir, model_files[0])
+    model = tf.keras.models.load_model(model_path)
+
+    return model
+    
+
 def load_results(results_dir):
     results = []
     files = []
@@ -60,47 +77,40 @@ def load_results(results_dir):
 #             Plot Methods              #
 #########################################
 
-def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_path, num_samples=5, num_classes=4):
+def plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_samples=5, num_classes=4):
     """
     Plots test images with probability distributions from the shallow and deep models.
 
     :param test_ds: TensorFlow dataset containing test images and labels
-    :param shallow_model_path: Path to the trained shallow model
-    :param deep_model_path: Path to the trained deep model
+    :param shallow_model: Trained shallow model
+    :param deep_model: Trained deep model
     :param num_samples: Number of test images to visualize
+    :param num_classes: Number of classes in the model's predictions
     """
-    # Load trained models
-    shallow_model = tf.keras.models.load_model(shallow_model_path)
-    # deep_model = tf.keras.models.load_model(deep_model_path)
 
-    # Extract images and labels properly
+    # Extract images from test dataset
     images = []
     for img_batch, _ in test_ds.take(num_samples):
         images.append(img_batch.numpy())  # Convert TensorFlow tensor to numpy
-
-    # Convert lists to numpy arrays
     images = np.concatenate(images, axis=0)
-
-    # Ensure we have the correct number of samples
     num_samples = min(num_samples, len(images))
 
+    # Predicting testing images
     shallow_predictions = shallow_model.predict(images[:num_samples])
     # deep_predictions = deep_model.predict(images[:num_samples])
 
-    # Convert images to uint8 for plotting
-    images = (images * 255).astype(np.uint8)
-
-    # Usage Example
-    class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes)
+    # Format images and class names
+    images = (images * 255).astype(np.uint8) # Convert images to uint8 for plotting
+    class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes) # Get class names
 
     # Fix issue when num_samples = 1
-    fig, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
+    _, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
     if num_samples == 1:
         axes = np.expand_dims(axes, axis=0)  # Ensure 2D shape
 
     for i in range(num_samples):
-        # Ensure images are in correct format for `imshow`
-        img = np.squeeze(images[i])  # Remove extra dimensions if needed
+        # Remove extra dimensions if needed
+        img = np.squeeze(images[i]) 
 
         # Shallow model predictions
         axes[i, 0].imshow(img.astype("uint8"))
@@ -119,17 +129,16 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     plt.savefig("figure_3.png")
 
     
-def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filename="figure4.png", num_classes=4):
+def plot_confusion_matrix(model, test_ds, title="Confusion Matrix", filename="figure4.png", num_classes=4):
     """
     Computes and plots a confusion matrix for a given model and test dataset.
 
-    :param model_path: Path to the trained model (.keras file)
+    :param model: Trained keras model
     :param test_ds: TensorFlow dataset containing test images and labels
     :param title: Title of the confusion matrix plot
+    :param filename: Filename to save the plot
+    :param num_classes: Number of classes in the model's predictions
     """
-    # Load the model
-    model = tf.keras.models.load_model(model_path)
-
     # Extract labels and predictions
     y_true, y_pred = [], []
     for images, labels in test_ds:
@@ -179,31 +188,38 @@ def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
 #########################################
     
 if __name__ == "__main__":
-
     # Parse command-line arguments
     parser = create_parser()
     args = parser.parse_args()
     check_args(args)
-    
+
+    # Load testing dataset and number of classes
     _, _, test_ds, num_classes = load_precached_folds(args)
 
-    shallow_model_dir ="./models/shallow_2/"
-    shallow_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
-
-    deep_model_dir = "./models/default_deep/"
-    deep_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
+    # Load trained models
+    shallow_model = None
+    deep_model = None
+    try:
+        shallow_model = load_trained_model("./models/shallow_2", "rot_00")
+    except Exception as e:
+        print(f"Error loading shallow model: {e}")
+    
+    try:
+        deep_model = load_trained_model("./models/default_deep/", "rot_00")
+    except Exception as e:
+        print(f"Error loading deep model: {e}")
     
     # Figure 3: Test Sample with Predictions
-    plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path=shallow_model_name, deep_model_path=deep_model_name, num_samples=5, num_classes=num_classes)
+    plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_samples=5, num_classes=num_classes)
 
     # Figure 4a: Shallow Model Confusion Matrix
-    # plot_confusion_matrix(shallow_model_name, test_ds, title="Shallow Model Confusion Matrix", filename="figure_4a.png", num_classes=num_classes)
+    plot_confusion_matrix(shallow_model, test_ds, title="Shallow Model Confusion Matrix", filename="figure_4a.png", num_classes=num_classes)
 
     # Figure 4b: Deep Model Confusion Matrix
-    # plot_confusion_matrix(deep_model_name, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png", num_classes=num_classes)
+    plot_confusion_matrix(deep_model, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png", num_classes=num_classes)
 
     # Figure 5: Test Accuracy Scatter Plot
-    # shallow_results = load_results(["./pkl/shallow_1/"])
-    # deep_results = load_results(["./pkl/default_deep/"])
-    # plot_test_accuracy_scatter(shallow_results, deep_results)
+    shallow_results = load_results(["./models/shallow_2/"])
+    deep_results = load_results(["./models/default_deep/"])
+    plot_test_accuracy_scatter(shallow_results, deep_results)
 
