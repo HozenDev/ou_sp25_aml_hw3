@@ -128,31 +128,38 @@ def plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_sa
     plt.tight_layout()
     plt.savefig("figure_3.png")
 
-    
-def plot_confusion_matrix(model, test_ds, title="Confusion Matrix", filename="figure4.png", num_classes=4):
-    """
-    Computes and plots a confusion matrix for a given model and test dataset.
 
-    :param model: Trained keras model
+def plot_combined_confusion_matrix(models, test_ds, title="Confusion Matrix", filename="figure_4.png", num_classes=4):
+    """
+    Computes and plots a combined confusion matrix from multiple model rotations.
+
+    :param model_paths: List of trained model file paths (one per rotation)
     :param test_ds: TensorFlow dataset containing test images and labels
+    :param core50_pkl_path: Path to core50 metadata file (core50_df.pkl)
     :param title: Title of the confusion matrix plot
-    :param filename: Filename to save the plot
-    :param num_classes: Number of classes in the model's predictions
     """
-    # Extract labels and predictions
     y_true, y_pred = [], []
-    for images, labels in test_ds:
-        y_true.extend(labels.numpy())  # Convert tensors to numpy
-        y_pred.extend(np.argmax(model.predict(images), axis=1))  # Predict classes
-
-    # Compute and display confusion matrix
-    cm = confusion_matrix(y_true, y_pred)
     class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes)
 
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=list(class_names.values()))
+    for model in models:
+        # Determine the number of classes dynamically
+        for images, _ in test_ds.take(1):
+            model.predict(images).shape[1]
+
+        # Collect predictions from this model rotation
+        for images, labels in test_ds:
+            y_true.extend(labels.numpy())  # Ground truth labels
+            y_pred.extend(np.argmax(model.predict(images), axis=1))  # Predicted classes
+
+    # Compute the combined confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+
+    # Plot confusion matrix
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=[class_names[i] for i in range(num_classes)])
     disp.plot(cmap='Blues', values_format='d')
     plt.title(title)
     plt.savefig(filename)
+
 
 def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
     """
@@ -197,29 +204,33 @@ if __name__ == "__main__":
     _, _, test_ds, num_classes = load_precached_folds(args)
 
     # Load trained models
-    shallow_model = None
-    deep_model = None
-    try:
-        shallow_model = load_trained_model("./models/shallow_2", "rot_00")
-    except Exception as e:
-        print(f"Error loading shallow model: {e}")
-    
-    try:
-        deep_model = load_trained_model("./models/default_deep/", "rot_00")
-    except Exception as e:
-        print(f"Error loading deep model: {e}")
+    shallow_models = []
+    deep_models = []
+
+    for i in range(num_classes):
+        try:
+            shallow_model = load_trained_model("./models/shallow_2", f"rot_0{i}")
+            shallow_models.append(shallow_model)
+        except Exception as e:
+            print(f"Error loading shallow model: {e}")
+        
+        try:
+            deep_model = load_trained_model("./models/deep_1/", f"rot_0{i}")
+            deep_models.append(deep_model)
+        except Exception as e:
+            print(f"Error loading deep model: {e}")
     
     # Figure 3: Test Sample with Predictions
-    plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_samples=5, num_classes=num_classes)
+    plot_test_sample_with_predictions(test_ds, shallow_models[0], deep_models[0], num_samples=5, num_classes=num_classes)
 
     # Figure 4a: Shallow Model Confusion Matrix
-    plot_confusion_matrix(shallow_model, test_ds, title="Shallow Model Confusion Matrix", filename="figure_4a.png", num_classes=num_classes)
+    plot_combined_confusion_matrix(shallow_models, test_ds, title="Shallow Model Confusion Matrix", filename="figure_4a.png", num_classes=num_classes)
 
     # Figure 4b: Deep Model Confusion Matrix
-    plot_confusion_matrix(deep_model, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png", num_classes=num_classes)
+    plot_combined_confusion_matrix(deep_models, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png", num_classes=num_classes)
 
     # Figure 5: Test Accuracy Scatter Plot
     shallow_results = load_results(["./models/shallow_2/"])
-    deep_results = load_results(["./models/default_deep/"])
+    deep_results = load_results(["./models/deep_1/"])
     plot_test_accuracy_scatter(shallow_results, deep_results)
 
