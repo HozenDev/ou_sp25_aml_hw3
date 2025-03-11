@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#SBATCH --partition=norma
-#SBATCH --cpus-per-task=40
+#SBATCH --partition=debug
+#SBATCH --cpus-per-task=20
 #SBATCH --mem=10G
 #SBATCH --output=results/hw3_plot_%j_stdout.txt
 #SBATCH --error=results/hw3_plot_%j_stderr.txt
