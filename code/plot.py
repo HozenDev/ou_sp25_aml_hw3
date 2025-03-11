@@ -3,23 +3,40 @@ import numpy as np
 import os
 import pickle
 import tensorflow as tf
+import pandas as pd
 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from keras.saving import load_model
 from hw3_base import load_precached_folds, check_args
 from hw3_parser import create_parser
+
+CORE50_METADATA_PATH = "/home/fagg/datasets/core50/core50_df.pkl"  # Adjust path if needed
+
+#########################################
+#             Class Mapping             #
+#########################################
+
+def get_class_mappings(core50_pkl_path):
+    """
+    Loads the core50_df.pkl file and extracts unique class labels.
+
+    :param core50_pkl_path: Path to the core50 metadata pickle file.
+    :return: Dictionary mapping class labels to object names.
+    """
+    # Load the metadata file
+    with open(core50_pkl_path, "rb") as f:
+        df = pickle.load(f)
+
+    # Extract unique class labels and objects
+    class_mapping = df[['class', 'object']].drop_duplicates().sort_values(by='class')
+    
+    # Create a dictionary mapping class index to object ID
+    class_dict = {row['class']: f"Object {row['object']}" for _, row in class_mapping.iterrows()}
+
+    return class_dict
 
 #########################################
 #             Load Results              #
 #########################################
-
-def load_trained_model(directory):
-    """
-    Load a trained Keras model from a given directory.
-    :param directory: Path to the .keras model file
-    :return: Loaded Keras model
-    """
-    return load_model(f"{directory}/model.keras")
 
 def load_results(results_dir):
     results = []
@@ -38,10 +55,6 @@ def load_results(results_dir):
 #             Plot Methods              #
 #########################################
 
-import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
-
 def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_path, num_samples=5):
     """
     Plots test images with probability distributions from the shallow and deep models.
@@ -56,14 +69,12 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     # deep_model = tf.keras.models.load_model(deep_model_path)
 
     # Extract images and labels properly
-    images, labels = [], []
-    for img_batch, label_batch in test_ds.take(num_samples):
+    images = []
+    for img_batch, _ in test_ds.take(num_samples):
         images.append(img_batch.numpy())  # Convert TensorFlow tensor to numpy
-        labels.append(label_batch.numpy())
 
     # Convert lists to numpy arrays
     images = np.concatenate(images, axis=0)
-    labels = np.concatenate(labels, axis=0)
 
     # Ensure we have the correct number of samples
     num_samples = min(num_samples, len(images))
@@ -71,12 +82,11 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
     shallow_predictions = shallow_model.predict(images[:num_samples])
     # deep_predictions = deep_model.predict(images[:num_samples])
 
+    # Convert images to uint8 for plotting
     images = (images * 255).astype(np.uint8)
 
-    print(images[0].shape)
-    print(images[0][0])
-    
-    class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']  # Adjust if needed
+    # Usage Example
+    class_names = get_class_mappings(CORE50_METADATA_PATH).values()
 
     # Fix issue when num_samples = 1
     fig, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
@@ -101,7 +111,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model_path, deep_model_pa
         axes[i, 1].set_title(f"Deep Model\n{deep_title}", fontsize=10)
 
     plt.tight_layout()
-    plt.savefig("figure3.png")
+    plt.savefig("figure_3.png")
 
     
 def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filename="figure4.png"):
@@ -123,7 +133,7 @@ def plot_confusion_matrix(model_path, test_ds, title="Confusion Matrix", filenam
 
     # Compute and display confusion matrix
     cm = confusion_matrix(y_true, y_pred)
-    class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']  # Adjust if needed
+    class_names = get_class_mappings(CORE50_METADATA_PATH).values()
 
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     disp.plot(cmap='Blues', values_format='d')
@@ -156,7 +166,7 @@ def plot_test_accuracy_scatter(shallow_results_files, deep_results_files):
     plt.title("Test Accuracy: Deep vs. Shallow")
     plt.legend()
     plt.grid(True)
-    plt.savefig("figure5.png")
+    plt.savefig("figure_5.png")
 
 
 #########################################
@@ -182,10 +192,10 @@ if __name__ == "__main__":
     plot_test_sample_with_predictions(test_ds=test_ds, shallow_model_path=shallow_model_name, deep_model_path=deep_model_name, num_samples=5)
 
     # Figure 4a: Shallow Model Confusion Matrix
-    # plot_confusion_matrix("Net_Shallow_model.keras", test_ds, title="Shallow Model Confusion Matrix", , filename="figure_4a.png")
+    # plot_confusion_matrix(shallow_model_name, test_ds, title="Shallow Model Confusion Matrix", , filename="figure_4a.png")
 
     # Figure 4b: Deep Model Confusion Matrix
-    # plot_confusion_matrix("Net_Deep_model.keras", test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png")
+    # plot_confusion_matrix(deep_model_name, test_ds, title="Deep Model Confusion Matrix", filename="figure_4b.png")
 
     # Figure 5: Test Accuracy Scatter Plot
     # shallow_results = load_results(["./pkl/shallow_1/"])
