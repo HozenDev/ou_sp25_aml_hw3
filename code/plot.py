@@ -101,7 +101,7 @@ def plot_test_sample_with_predictions(test_ds, shallow_model, deep_model, num_sa
 
     # Format images and class names
     images = (images * 255).astype(np.uint8) # Convert images to uint8 for plotting
-    class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes) # Get class names
+    class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']
 
     # Fix issue when num_samples = 1
     _, axes = plt.subplots(num_samples, 2, figsize=(12, 4 * num_samples))
@@ -138,7 +138,7 @@ def plot_combined_confusion_matrix(models, test_ds, title="Confusion Matrix", fi
     :param title: Title of the confusion matrix plot
     """
     y_true, y_pred = [], []
-    class_names = get_class_mappings(CORE50_METADATA_PATH, num_classes)
+    class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']
 
     for model in models:
         # Determine the number of classes dynamically
