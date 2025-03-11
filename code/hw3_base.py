@@ -328,6 +328,21 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:int=1):
     args_str = augment_args(args)
 
     #################################
+    #         Load Datasets         #
+    #################################
+
+    if args.verbose >= 3:
+        print('Starting data flow')
+
+    if args.precache is None:
+        # Load individual files (all objects); DON'T USE THIS CASE
+        # ds_train, ds_validation, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
+        raise ValueError("No precache, do not use this case")
+    else:
+        # Load pre-cached data: this is what you want for HW 3
+        ds_train, ds_validation, ds_testing, n_classes = load_precached_folds(args)
+
+    #################################
     #       Model Configuration     #
     #################################
 
@@ -456,21 +471,6 @@ def execute_exp(args:argparse.ArgumentParser=None, multi_gpus:int=1):
 
     if args.verbose >= 3:
         print('Fitting model')
-
-    #################################
-    #         Load Datasets         #
-    #################################
-
-    if args.verbose >= 3:
-        print('Starting data flow')
-
-    if args.precache is None:
-        # Load individual files (all objects); DON'T USE THIS CASE
-        # ds_train, ds_validation, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
-        raise ValueError("No precache, do not use this case")
-    else:
-        # Load pre-cached data: this is what you want for HW 3
-        ds_train, ds_validation, ds_testing, n_classes = load_precached_folds(args)
 
     #################################
     #              Learn            #
