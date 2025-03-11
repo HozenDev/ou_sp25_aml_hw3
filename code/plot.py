@@ -49,7 +49,7 @@ def load_trained_model(model_dir, substring_name):
     :param regex: Regular expression to match the model file
     :return: Loaded model
     """
-    model_files = [f for f in os.listdir(model_dir) if substring_name in f]
+    model_files = [f for f in os.listdir(model_dir) if substring_name in f and f.endswith(".keras")]
 
     if not model_files:
         raise ValueError(f"No model found in {model_dir} matching {substring_name}")
@@ -205,8 +205,9 @@ if __name__ == "__main__":
     # Load trained models
     shallow_models = []
     deep_models = []
-
-    for i in range(num_classes):
+    nb_rotation = 5
+    
+    for i in range(nb_rotation):
         try:
             shallow_model = load_trained_model("./models/shallow_2", f"rot_0{i}")
             shallow_models.append(shallow_model)
@@ -218,7 +219,7 @@ if __name__ == "__main__":
             deep_models.append(deep_model)
         except Exception as e:
             print(f"Error loading deep model: {e}")
-    
+
     # Figure 3: Test Sample with Predictions
     plot_test_sample_with_predictions(test_ds, shallow_models[0], deep_models[0], num_samples=5, num_classes=num_classes)
 
