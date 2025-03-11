@@ -16,5 +16,5 @@
 !/report
 /report/*
 !/report/*.org
-!/report/*.pdff
+!/report/*.pdf
 
