@@ -20,6 +20,7 @@ Andrew H. Fagg
 andrewhfagg@gmail.com
 '''
 
+import png
 import os
 import fnmatch
 import re

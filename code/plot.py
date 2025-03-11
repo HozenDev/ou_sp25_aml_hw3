@@ -3,7 +3,8 @@ import numpy as np
 import os
 import pickle
 
-from tensorflow.keras.models import load_model
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from keras.saving import load_model
 from hw3_base import load_precached_folds
 from hw3_parser import create_parser
 from core50 import Core50
@@ -103,31 +104,10 @@ def compute_confusion_matrix(true_labels, predicted_labels, num_classes):
     
 # Figure 4a, 4b: Confusion matrix (aggregated across rotations)
 def plot_confusion_matrix(true_labels_list, predicted_labels_list, class_names, title="Confusion Matrix"):
-    all_true_labels = np.concatenate(true_labels_list)
-    all_predicted_labels = np.concatenate(predicted_labels_list)
-
-    conf_matrix = compute_confusion_matrix(all_true_labels, all_predicted_labels, len(class_names))
-
-    # Plot confusion matrix
-    fig, ax = plt.subplots(figsize=(6, 6))
-    cax = ax.matshow(conf_matrix, cmap='Blues')  # Plot matrix
-    plt.colorbar(cax)  # Add color scale
-
-    # Set axis labels
-    ax.set_xticks(range(len(class_names)))
-    ax.set_yticks(range(len(class_names)))
-    ax.set_xticklabels(class_names)
-    ax.set_yticklabels(class_names)
-    
-    plt.xlabel('Predicted Labels')
-    plt.ylabel('True Labels')
-    plt.title('Confusion Matrix')
-
-    # Display values in the matrix
-    for i in range(len(class_names)):
-        for j in range(len(class_names)):
-            plt.text(j, i, str(conf_matrix[i, j]), ha='center', va='center', color='black')
-
+    cm = confusion_matrix(true_labels_list, predicted_labels_list)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp.plot(cmap='Blues', values_format='d')
+    plt.title(title)
     plt.show()
 
 # Figure 5: Scatter plot of test accuracy for deep vs shallow models
@@ -150,33 +130,36 @@ if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
 
-    if args.precache is None:
-        # Load individual files (all objects); DON'T USE THIS CASE
-        _, _, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
-    else:
-        # Load pre-cached data: this is what you want for HW 3
-        _, _, ds_testing, n_classes = load_precached_folds(args)
+    # if args.precache is None:
+    #     # Load individual files (all objects); DON'T USE THIS CASE
+    #     _, _, ds_testing, n_classes = load_data_set_by_folds(args, objects = list(range(10)))
+    # else:
+    #     # Load pre-cached data: this is what you want for HW 3
+    #     _, _, ds_testing, n_classes = load_precached_folds(args)
     
     # Load data (modify paths accordingly)
     shallow_dir = ["./pkl/shallow_1/"]
     deep_dir = ["./pkl/default_deep/"]
 
     shallow_results = load_results(shallow_dir)
-    shallow_model = load_trained_model(shallow_dir)
+    # shallow_model = load_trained_model(shallow_dir)
     deep_results = load_results(deep_dir)
-    deep_model = load_trained_model(deep_dir)
+    # deep_model = load_trained_model(deep_dir)
     
     # Extract relevant data
     shallow_preds = [np.argmax(res['predict_testing'], axis=1) for res in shallow_results]
     deep_preds = [np.argmax(res['predict_testing'], axis=1) for res in deep_results]
-    true_labels = [res['predict_testing_eval'][1] for res in shallow_results]  # Assuming same for all rotations
+    true_labels = range(0,5)  # Assuming same for all rotations
+
+    print(deep_preds)
+    print(true_labels)
 
     class_names = ['Plug Adapter', 'Scissors', 'Light Bulb', 'Cup']
 
     # Generate Figures
-    plot_sample_predictions(args, shallow_results[0]['predict_testing'], class_names)
-    # plot_confusion_matrix(true_labels, shallow_preds, class_names, "Shallow Model Confusion Matrix")
-    # plot_confusion_matrix(true_labels, deep_preds, class_names, "Deep Model Confusion Matrix")
+    # plot_sample_predictions(args, shallow_results[0]['predict_testing'], class_names)
+    plot_confusion_matrix(true_labels, shallow_preds, class_names, "Shallow Model Confusion Matrix")
+    plot_confusion_matrix(true_labels, deep_preds, class_names, "Deep Model Confusion Matrix")
     
     # Compute accuracy for each rotation
     # shallow_accuracies = [res['predict_testing_eval'][1] for res in shallow_results]
