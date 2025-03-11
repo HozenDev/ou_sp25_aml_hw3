@@ -10,14 +10,11 @@
 #SBATCH --mail-user=Enzo.B.Durel-1@ou.edu
 #SBATCH --mail-type=ALL
 #SBATCH --chdir=/home/cs504305/hw3/code/
-#SBATCH --array=0-4
 
 #################################################
 # Do not change this line unless you have your own python/tensorflow/keras set up
 . /home/fagg/tf_setup.sh
 conda activate dnn
 
-SLURM_ARRAY_TASK_ID=0
-
 ## SHALLOW
-python plot.py -v @exp.txt @oscer.txt --exp_index $SLURM_ARRAY_TASK_ID  --cache "" --render
+python plot.py -v @exp.txt @oscer.txt --cache "" --render

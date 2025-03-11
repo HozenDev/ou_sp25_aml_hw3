@@ -150,7 +150,6 @@ if __name__ == "__main__":
     
     _, _, test_ds, _ = load_precached_folds(args)
 
-
     shallow_model_dir ="./models/shallow_2/"
     shallow_model_name = f"{shallow_model_dir}image_Net_ShallowNet_Shallow_Csize_3_3_Cfilters_8_16_Pool_2_1_Pad_valid_hidden_32_drop_0.500_sdrop_0.200_L2_0.000100_LR_0.001000_ntrain_03_rot_00_model.keras"
 
