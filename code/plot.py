@@ -218,7 +218,7 @@ if __name__ == "__main__":
             print(f"Error loading shallow model: {e}")
         
         try:
-            deep_model = load_trained_model("./models/deep_1/", f"rot_0{i}")
+            deep_model = load_trained_model("./models/deep_2/", f"rot_0{i}")
             deep_models.append(deep_model)
         except Exception as e:
             print(f"Error loading deep model: {e}")
@@ -234,6 +234,6 @@ if __name__ == "__main__":
 
     # Figure 5: Test Accuracy Scatter Plot
     shallow_results = load_results(["./models/shallow_2/"])
-    deep_results = load_results(["./models/deep_1/"])
+    deep_results = load_results(["./models/deep_2/"])
     plot_test_accuracy_scatter(shallow_results, deep_results)
 
